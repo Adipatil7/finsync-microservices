@@ -1,4 +1,4 @@
-package com.authservice.entity;
+package com.groupservice.entity;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -15,32 +15,33 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
-@Table(name = "users",
-       uniqueConstraints = {
-            @UniqueConstraint(columnNames = "email")
-       }
-)
 @Data
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
-
+@Entity
+@Table(name = "group_members",
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = {"group_id", "user_id"})
+       }
+)
+public class GroupMember {
+    
     @Id
     @GeneratedValue
     private UUID id;
 
+    @Column(name = "group_id", nullable = false)
+    private UUID groupId;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
     @Column(nullable = false)
-    private String name;
-    @Column(nullable = false, unique = true)
-    private String email;
-    @Column(nullable = false)
-    private String password;
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-    
+    private String role;
+
+    @Column(name = "joined_at", nullable = false)
+    private LocalDateTime joinedAt;
+
 }
