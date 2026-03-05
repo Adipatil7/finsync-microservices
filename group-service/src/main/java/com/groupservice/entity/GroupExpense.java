@@ -5,8 +5,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.groupservice.enums.SplitType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -50,6 +54,10 @@ public class GroupExpense {
 
     @Column(name = "expense_date", nullable = false)
     private LocalDate expenseDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "split_type", nullable = false)
+    private SplitType splitType;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

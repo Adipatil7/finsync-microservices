@@ -1,0 +1,21 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: settlement-service
+
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: settlement-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.expense"
+        spring.json.value.default.type: com.expense.common.events.UserRegisteredEvent 
+
+  jpa:
+    hibernate:
+      ddl-auto: update

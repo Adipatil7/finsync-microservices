@@ -20,11 +20,22 @@ services:
     ports:
       - "5434:5432"
 
+  postgres-settlement:
+    image: postgres:15
+    container_name: postgres-settlement
+    environment:
+      POSTGRES_DB: settlement_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+
   auth-service:
     build: ../auth-service
     container_name: auth-service
     depends_on:
       - postgres-auth
+      - kafka
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth_db
       SPRING_DATASOURCE_USERNAME: postgres
@@ -37,6 +48,7 @@ services:
     container_name: group-service
     depends_on:
       - postgres-group
+      - kafka
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-group:5432/group_db
       SPRING_DATASOURCE_USERNAME: postgres
@@ -44,12 +56,27 @@ services:
     ports:
       - "8082:8082"
   
+  settlement-service:
+    build: ../settlement-service
+    container_name: settlement-service
+    depends_on:
+      - postgres-settlement
+      - kafka
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-settlement:5432/settlement_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8083:8083"
+  
   api-service:
     build: ../api-service
     container_name: api-service
     depends_on:
       - auth-service
       - group-service
+      - settlement-service
     ports:
       - "8080:8080"
 

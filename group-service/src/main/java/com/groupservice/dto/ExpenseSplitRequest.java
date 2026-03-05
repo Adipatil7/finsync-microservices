@@ -21,6 +21,7 @@ public class ExpenseSplitRequest {
     @NotNull
     private UUID userId; 
 
+    
     @NotNull
     @Positive
     private BigDecimal amount; 
