@@ -5,6 +5,11 @@ spring:
   application:
     name: settlement-service
 
+  datasource:
+    url: jdbc:postgresql://postgres-settlement:5432/settlement_db
+    username: postgres
+    password: postgres
+
   kafka:
     bootstrap-servers: kafka:9092
     consumer:
@@ -13,9 +18,10 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "com.expense"
-        spring.json.value.default.type: com.expense.common.events.UserRegisteredEvent 
+        spring.json.trusted.packages: "com.expense.common.events"
+        spring.json.value.default.type: com.expense.common.events.GroupExpenseCreatedEvent
 
   jpa:
     hibernate:
       ddl-auto: update
+    show-sql: true

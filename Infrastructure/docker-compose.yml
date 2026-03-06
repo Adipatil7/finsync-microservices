@@ -30,6 +30,16 @@ services:
     ports:
       - "5435:5432"
 
+  postgres-personal:
+    image: postgres:15
+    container_name: postgres-personal
+    environment:
+      POSTGRES_DB: personal_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+
   auth-service:
     build: ../auth-service
     container_name: auth-service
@@ -69,6 +79,20 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
     ports:
       - "8083:8083"
+      
+  personal-finance-service:
+    build: ../personal-finance-service
+    container_name: personal-finance-service
+    depends_on:
+      - postgres-personal
+      - kafka
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-personal:5432/personal_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8084:8084"
   
   api-service:
     build: ../api-service
@@ -77,6 +101,7 @@ services:
       - auth-service
       - group-service
       - settlement-service
+      - personal-finance-service
     ports:
       - "8080:8080"
 
