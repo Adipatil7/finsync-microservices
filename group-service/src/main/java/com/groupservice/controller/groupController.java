@@ -50,7 +50,7 @@ public class groupController {
     @PostMapping("/{groupId}/expenses")
     public ResponseEntity<Void> createExpense(
         @PathVariable UUID groupId,
-         @Valid @RequestBody CreateExpenseRequest request
+        @Valid @RequestBody CreateExpenseRequest request
     ) throws BadRequestException{
 
         this.groupService.createExpense(groupId, request);

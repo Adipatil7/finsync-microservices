@@ -3,6 +3,7 @@ package com.authservice.Service.ServiceImpl;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.authservice.Service.UserService;
@@ -21,12 +22,15 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserEventProducer userEventProducer;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public User saveUser(RegisterUserRequest request) {
 
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
