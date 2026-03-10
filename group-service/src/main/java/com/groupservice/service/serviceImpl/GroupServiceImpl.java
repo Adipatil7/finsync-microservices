@@ -17,6 +17,8 @@ import com.groupservice.dto.AddMemberRequest;
 import com.groupservice.dto.CreateExpenseRequest;
 import com.groupservice.dto.CreateGroupRequest;
 import com.groupservice.dto.ExpenseSplitRequest;
+import com.groupservice.dto.GroupResponse;
+import com.groupservice.dto.GroupMemberResponse;
 import com.groupservice.entity.Group;
 import com.groupservice.entity.GroupExpense;
 import com.groupservice.entity.GroupExpenseSplit;
@@ -67,6 +69,8 @@ public class GroupServiceImpl implements GroupService {
 
                 Group group = new Group();
                 group.setName(request.getName());
+                group.setDescription(request.getDescription());
+                group.setCurrency(request.getCurrency() != null ? request.getCurrency() : "INR");
                 group.setCreatedBy(request.getCreatedBy());
                 group.setCreatedAt(LocalDateTime.now());
                 group.setUpdatedAt(LocalDateTime.now());
@@ -175,6 +179,75 @@ public class GroupServiceImpl implements GroupService {
 
                 groupEventProducer.publishExpenseCreated(event);
 
+        }
+
+        @Override
+        public List<Group> getGroupsByUserId(UUID userId) {
+                List<GroupMember> memberships = this.groupMemberRepository.findByUserId(userId);
+                List<UUID> groupIds = memberships.stream().map(GroupMember::getGroupId).toList();
+                return this.groupRepository.findAllById(groupIds);
+        }
+
+        @Override
+        public Group getGroupById(UUID groupId) {
+                return this.groupRepository.findById(groupId)
+                                .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+        }
+
+        @Override
+        public List<GroupMemberResponse> getGroupMembers(UUID groupId) {
+                this.groupRepository.findById(groupId)
+                                .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+                List<GroupMember> members = this.groupMemberRepository.findByGroupId(groupId);
+                return members.stream().map(member -> {
+                        String name = this.groupUserRepository.findById(member.getUserId())
+                                        .map(GroupUser::getName)
+                                        .orElse("Unknown User");
+                        return GroupMemberResponse.from(member, name);
+                }).toList();
+        }
+
+        @Override
+        public List<GroupExpense> getGroupExpenses(UUID groupId) {
+                this.groupRepository.findById(groupId)
+                                .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+                return this.groupExpenseRepository.findByGroupId(groupId);
+        }
+
+        @Override
+        @Transactional
+        public void deleteGroup(UUID groupId) {
+                this.groupRepository.findById(groupId)
+                                .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+                this.groupRepository.deleteById(groupId);
+        }
+
+        @Override
+        @Transactional
+        public Group updateGroup(UUID groupId, String name) {
+                Group group = this.groupRepository.findById(groupId)
+                                .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+                group.setName(name);
+                group.setUpdatedAt(LocalDateTime.now());
+                return this.groupRepository.save(group);
+        }
+
+        @Override
+        @Transactional
+        public void removeMember(UUID groupId, UUID userId) {
+                this.groupRepository.findById(groupId)
+                                .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+                this.groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "User with id: " + userId + " is not a member of group: " + groupId));
+                this.groupMemberRepository.deleteByGroupIdAndUserId(groupId, userId);
+        }
+
+        @Override
+        public GroupResponse buildGroupResponse(Group group) {
+                long memberCount = this.groupMemberRepository.countByGroupId(group.getId());
+                BigDecimal totalSpent = this.groupExpenseRepository.sumAmountByGroupId(group.getId());
+                return GroupResponse.from(group, (int) memberCount, totalSpent);
         }
 
 }

@@ -1,15 +1,43 @@
 # Maven
 target/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
 *.log
 
-# IntelliJ / VS Code
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+.env*.local
+.npm
+.eslintcache
+
+# IntelliJ IDEA
 .idea/
-.vscode/
+*.iws
 *.iml
+*.ipr
+out/
+
+# VS Code
+.vscode/
+.history/
+*.code-workspace
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Docker
-**/target/
+docker-compose.override.yml

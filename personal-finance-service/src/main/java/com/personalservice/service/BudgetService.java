@@ -110,4 +110,11 @@ public class BudgetService {
         
         return response;
     }
+
+    @Transactional
+    public void deleteBudget(UUID userId, UUID budgetId) {
+        Budget budget = budgetRepository.findByIdAndUserId(budgetId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
+        budgetRepository.delete(budget);
+    }
 }

@@ -40,4 +40,11 @@ public class CategoryService {
                 .map(categoryMapper::toResponse)
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void deleteCategory(UUID userId, UUID categoryId) {
+        Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
+                .orElseThrow(() -> new ValidationException("Category not found"));
+        categoryRepository.delete(category);
+    }
 }

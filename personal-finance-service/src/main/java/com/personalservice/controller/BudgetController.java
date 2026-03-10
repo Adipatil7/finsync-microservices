@@ -31,4 +31,12 @@ public class BudgetController {
             @RequestHeader("X-User-Id") UUID userId) {
         return ResponseEntity.ok(budgetService.getBudgets(userId));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBudget(
+            @RequestHeader("X-User-Id") UUID userId,
+            @PathVariable UUID id) {
+        budgetService.deleteBudget(userId, id);
+        return ResponseEntity.noContent().build();
+    }
 }

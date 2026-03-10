@@ -54,7 +54,7 @@ public class AuthController {
         if (authenticate.isAuthenticated()) {
             User user = userRepository.findByEmail(request.getEmail()).get();
             String token = jwtUtil.generateToken(user.getId().toString(), user.getEmail());
-            return ResponseEntity.ok(new AuthResponse(token, user.getId().toString(), user.getEmail()));
+            return ResponseEntity.ok(new AuthResponse(token, user.getId().toString(), user.getEmail(), user.getName()));
         } else {
             throw new RuntimeException("Invalid access");
         }

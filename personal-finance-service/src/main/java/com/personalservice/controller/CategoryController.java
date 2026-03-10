@@ -31,4 +31,12 @@ public class CategoryController {
             @RequestHeader("X-User-Id") UUID userId) {
         return ResponseEntity.ok(categoryService.getCategories(userId));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCategory(
+            @RequestHeader("X-User-Id") UUID userId,
+            @PathVariable UUID id) {
+        categoryService.deleteCategory(userId, id);
+        return ResponseEntity.noContent().build();
+    }
 }

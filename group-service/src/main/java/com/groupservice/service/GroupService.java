@@ -1,5 +1,6 @@
 package com.groupservice.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.coyote.BadRequestException;
@@ -7,7 +8,11 @@ import org.apache.coyote.BadRequestException;
 import com.groupservice.dto.AddMemberRequest;
 import com.groupservice.dto.CreateExpenseRequest;
 import com.groupservice.dto.CreateGroupRequest;
+import com.groupservice.dto.GroupResponse;
 import com.groupservice.entity.Group;
+import com.groupservice.entity.GroupExpense;
+import com.groupservice.entity.GroupMember;
+import com.groupservice.dto.GroupMemberResponse;
 
 public interface GroupService {
 
@@ -16,5 +21,21 @@ public interface GroupService {
     void addMemberToGroup(UUID groupId, AddMemberRequest request);
 
     void createExpense(UUID groupId, CreateExpenseRequest request) throws BadRequestException;
+
+    List<Group> getGroupsByUserId(UUID userId);
+
+    Group getGroupById(UUID groupId);
+
+    List<GroupMemberResponse> getGroupMembers(UUID groupId);
+
+    List<GroupExpense> getGroupExpenses(UUID groupId);
+
+    void deleteGroup(UUID groupId);
+
+    Group updateGroup(UUID groupId, String name);
+
+    void removeMember(UUID groupId, UUID userId);
+
+    GroupResponse buildGroupResponse(Group group);
 
 }

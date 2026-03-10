@@ -20,6 +20,10 @@ public class CreateGroupRequest {
     @NotBlank
     private String name;
 
+    private String description;
+
+    private String currency;
+
     @NotNull
     private UUID createdBy;
 }

@@ -32,6 +32,12 @@ public class Group {
     @Column(nullable = false)
     private String name;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(length = 3)
+    private String currency;
+
     @Column(name = "created_by", nullable = false)
     private UUID createdBy;
 
