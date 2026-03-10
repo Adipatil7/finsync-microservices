@@ -154,4 +154,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-_Created with ❤️ by the FinSync Team._
+_Created with ❤️ me._
