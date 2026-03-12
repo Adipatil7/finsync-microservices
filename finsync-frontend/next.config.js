@@ -2,7 +2,8 @@
 const nextConfig = {
   output: "standalone",
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+    const backendUrl = process.env.BACKEND_URL || 'http://api-service:8080';
+    console.log(`[NextConfig] Using backend URL for rewrites: ${backendUrl}`);
     return [
       {
         source: "/api/groups-root",
