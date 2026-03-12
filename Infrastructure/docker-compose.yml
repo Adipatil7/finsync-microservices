@@ -105,6 +105,17 @@ services:
     ports:
       - "8080:8080"
 
+  finsync-frontend:
+    build: ../finsync-frontend
+    container_name: finsync-frontend
+    depends_on:
+      - api-service
+    ports:
+      - "3000:3000"
+    environment:
+      - BACKEND_URL=http://api-service:8080
+    restart: always
+
   kafka:
     image: confluentinc/cp-kafka:7.6.1
     container_name: kafka
