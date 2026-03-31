@@ -154,4 +154,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-_Created with ❤️ me._
+_Created with me._
