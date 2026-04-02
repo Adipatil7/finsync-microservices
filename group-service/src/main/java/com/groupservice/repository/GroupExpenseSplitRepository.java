@@ -8,4 +8,6 @@ import com.groupservice.entity.GroupExpenseSplit;
 
 public interface GroupExpenseSplitRepository extends JpaRepository<GroupExpenseSplit , UUID> {
     
+    void deleteByExpenseId(UUID expenseId);
+
 }

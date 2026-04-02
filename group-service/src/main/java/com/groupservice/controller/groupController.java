@@ -60,18 +60,21 @@ public class groupController {
     @PutMapping("/{groupId}")
     public ResponseEntity<GroupResponse> updateGroup(
             @PathVariable UUID groupId,
+            @RequestHeader("X-User-Id") UUID requestingUserId,
             @RequestBody Map<String, String> body) {
         String name = body.get("name");
         if (name == null || name.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
-        Group group = this.groupService.updateGroup(groupId, name);
+        Group group = this.groupService.updateGroup(groupId, name, requestingUserId);
         return ResponseEntity.ok(groupService.buildGroupResponse(group));
     }
 
     @DeleteMapping("/{groupId}")
-    public ResponseEntity<Void> deleteGroup(@PathVariable UUID groupId) {
-        this.groupService.deleteGroup(groupId);
+    public ResponseEntity<Void> deleteGroup(
+            @PathVariable UUID groupId,
+            @RequestHeader("X-User-Id") UUID requestingUserId) {
+        this.groupService.deleteGroup(groupId, requestingUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -86,16 +89,18 @@ public class groupController {
     @PostMapping("/{groupId}/members")
     public ResponseEntity<Void> addMember(
             @PathVariable UUID groupId,
+            @RequestHeader("X-User-Id") UUID requestingUserId,
             @Valid @RequestBody AddMemberRequest request) {
-        this.groupService.addMemberToGroup(groupId, request);
+        this.groupService.addMemberToGroup(groupId, request, requestingUserId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{groupId}/members/{userId}")
     public ResponseEntity<Void> removeMember(
             @PathVariable UUID groupId,
-            @PathVariable UUID userId) {
-        this.groupService.removeMember(groupId, userId);
+            @PathVariable UUID userId,
+            @RequestHeader("X-User-Id") UUID requestingUserId) {
+        this.groupService.removeMember(groupId, userId, requestingUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -113,6 +118,15 @@ public class groupController {
             @Valid @RequestBody CreateExpenseRequest request) throws BadRequestException {
         this.groupService.createExpense(groupId, request);
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{groupId}/expenses/{expenseId}")
+    public ResponseEntity<Void> deleteExpense(
+            @PathVariable UUID groupId,
+            @PathVariable UUID expenseId,
+            @RequestHeader("X-User-Id") UUID requestingUserId) {
+        this.groupService.deleteExpense(groupId, expenseId, requestingUserId);
+        return ResponseEntity.noContent().build();
     }
 
 }

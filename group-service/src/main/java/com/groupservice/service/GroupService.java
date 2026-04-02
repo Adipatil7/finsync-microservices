@@ -11,14 +11,13 @@ import com.groupservice.dto.CreateGroupRequest;
 import com.groupservice.dto.GroupResponse;
 import com.groupservice.entity.Group;
 import com.groupservice.entity.GroupExpense;
-import com.groupservice.entity.GroupMember;
 import com.groupservice.dto.GroupMemberResponse;
 
 public interface GroupService {
 
     Group createGroup(CreateGroupRequest request);
 
-    void addMemberToGroup(UUID groupId, AddMemberRequest request);
+    void addMemberToGroup(UUID groupId, AddMemberRequest request, UUID requestingUserId);
 
     void createExpense(UUID groupId, CreateExpenseRequest request) throws BadRequestException;
 
@@ -30,11 +29,13 @@ public interface GroupService {
 
     List<GroupExpense> getGroupExpenses(UUID groupId);
 
-    void deleteGroup(UUID groupId);
+    void deleteGroup(UUID groupId, UUID requestingUserId);
 
-    Group updateGroup(UUID groupId, String name);
+    Group updateGroup(UUID groupId, String name, UUID requestingUserId);
 
-    void removeMember(UUID groupId, UUID userId);
+    void removeMember(UUID groupId, UUID userId, UUID requestingUserId);
+
+    void deleteExpense(UUID groupId, UUID expenseId, UUID requestingUserId);
 
     GroupResponse buildGroupResponse(Group group);
 

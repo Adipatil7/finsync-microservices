@@ -19,7 +19,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "settlements",
-      uniqueConstraints = @UniqueConstraint(columnNames = {"expense_id", "paid_to"})
+      uniqueConstraints = @UniqueConstraint(columnNames = {"expense_id", "paid_by"})
 )
 @Data
 @Getter

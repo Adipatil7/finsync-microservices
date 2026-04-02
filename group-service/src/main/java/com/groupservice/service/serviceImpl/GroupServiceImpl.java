@@ -24,12 +24,15 @@ import com.groupservice.entity.GroupExpense;
 import com.groupservice.entity.GroupExpenseSplit;
 import com.groupservice.entity.GroupMember;
 import com.groupservice.entity.GroupUser;
+import com.groupservice.enums.GroupRole;
+import com.groupservice.exception.AccessDeniedException;
 import com.groupservice.kafka.GroupEventProducer;
 import com.groupservice.repository.GroupExpenseRepository;
 import com.groupservice.repository.GroupExpenseSplitRepository;
 import com.groupservice.repository.GroupMemberRepository;
 import com.groupservice.repository.GroupRepository;
 import com.groupservice.repository.GroupUserRepository;
+import com.groupservice.service.GroupAuthorizationService;
 import com.groupservice.service.GroupService;
 import com.groupservice.split.SplitStrategy;
 import com.groupservice.split.SplitStrategyFactory;
@@ -60,6 +63,9 @@ public class GroupServiceImpl implements GroupService {
         @Autowired
         private SplitStrategyFactory splitStrategyFactory;
 
+        @Autowired
+        private GroupAuthorizationService authService;
+
         @Override
         @Transactional
         public Group createGroup(CreateGroupRequest request) {
@@ -79,7 +85,7 @@ public class GroupServiceImpl implements GroupService {
                 GroupMember groupMember = new GroupMember();
                 groupMember.setGroupId(savedGroup.getId());
                 groupMember.setUserId(request.getCreatedBy());
-                groupMember.setRole("ADMIN");
+                groupMember.setRole(GroupRole.ADMIN.name());
                 groupMember.setJoinedAt(LocalDateTime.now());
 
                 this.groupMemberRepository.save(groupMember);
@@ -90,9 +96,13 @@ public class GroupServiceImpl implements GroupService {
 
         @Override
         @Transactional
-        public void addMemberToGroup(UUID groupId, AddMemberRequest request) {
+        public void addMemberToGroup(UUID groupId, AddMemberRequest request, UUID requestingUserId) {
                 this.groupRepository.findById(groupId)
                                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+
+                // RBAC: Only ADMIN can add members
+                authService.requireAdmin(groupId, requestingUserId);
+
                 this.groupUserRepository.findById(request.getUserId())
                                 .orElseThrow(() -> new RuntimeException(
                                                 "User not found with id: " + request.getUserId()));
@@ -103,10 +113,13 @@ public class GroupServiceImpl implements GroupService {
                                                         + " is already a member of the group with id: " + groupId);
                                 });
 
+                // Validate and default role
+                GroupRole validatedRole = GroupRole.fromString(request.getRole());
+
                 GroupMember groupMember = new GroupMember();
                 groupMember.setGroupId(groupId);
                 groupMember.setUserId(request.getUserId());
-                groupMember.setRole(request.getRole());
+                groupMember.setRole(validatedRole.name());
                 groupMember.setJoinedAt(LocalDateTime.now());
 
                 this.groupMemberRepository.save(groupMember);
@@ -216,17 +229,25 @@ public class GroupServiceImpl implements GroupService {
 
         @Override
         @Transactional
-        public void deleteGroup(UUID groupId) {
+        public void deleteGroup(UUID groupId, UUID requestingUserId) {
                 this.groupRepository.findById(groupId)
                                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+
+                // RBAC: Only ADMIN can delete group
+                authService.requireAdmin(groupId, requestingUserId);
+
                 this.groupRepository.deleteById(groupId);
         }
 
         @Override
         @Transactional
-        public Group updateGroup(UUID groupId, String name) {
+        public Group updateGroup(UUID groupId, String name, UUID requestingUserId) {
                 Group group = this.groupRepository.findById(groupId)
                                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+
+                // RBAC: Only ADMIN can update group
+                authService.requireAdmin(groupId, requestingUserId);
+
                 group.setName(name);
                 group.setUpdatedAt(LocalDateTime.now());
                 return this.groupRepository.save(group);
@@ -234,13 +255,56 @@ public class GroupServiceImpl implements GroupService {
 
         @Override
         @Transactional
-        public void removeMember(UUID groupId, UUID userId) {
+        public void removeMember(UUID groupId, UUID userId, UUID requestingUserId) {
                 this.groupRepository.findById(groupId)
                                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
-                this.groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+
+                // RBAC: Only ADMIN can remove members
+                authService.requireAdmin(groupId, requestingUserId);
+
+                GroupMember member = this.groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
                                 .orElseThrow(() -> new RuntimeException(
                                                 "User with id: " + userId + " is not a member of group: " + groupId));
+
+                // Safety: Prevent removing the last ADMIN
+                if (GroupRole.ADMIN.name().equals(member.getRole()) && authService.isLastAdmin(groupId)) {
+                        throw new RuntimeException(
+                                        "Cannot remove the last ADMIN from group " + groupId
+                                                        + ". Promote another member to ADMIN first.");
+                }
+
                 this.groupMemberRepository.deleteByGroupIdAndUserId(groupId, userId);
+        }
+
+        @Override
+        @Transactional
+        public void deleteExpense(UUID groupId, UUID expenseId, UUID requestingUserId) {
+                this.groupRepository.findById(groupId)
+                                .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+
+                GroupExpense expense = this.groupExpenseRepository.findById(expenseId)
+                                .orElseThrow(() -> new RuntimeException("Expense not found with id: " + expenseId));
+
+                if (!expense.getGroupId().equals(groupId)) {
+                        throw new RuntimeException("Expense " + expenseId + " does not belong to group " + groupId);
+                }
+
+                // RBAC: ADMIN can delete any expense, MEMBER can delete only their own
+                GroupMember member = this.groupMemberRepository.findByGroupIdAndUserId(groupId, requestingUserId)
+                                .orElseThrow(() -> new AccessDeniedException(
+                                                "User " + requestingUserId + " is not a member of group " + groupId));
+
+                boolean isAdmin = GroupRole.ADMIN.name().equals(member.getRole());
+                boolean isOwner = expense.getPaidBy().equals(requestingUserId);
+
+                if (!isAdmin && !isOwner) {
+                        throw new AccessDeniedException(
+                                        "User " + requestingUserId
+                                                        + " is not authorized to delete this expense. Only ADMIN or the expense creator can delete.");
+                }
+
+                this.groupExpenseSplitRepository.deleteByExpenseId(expenseId);
+                this.groupExpenseRepository.deleteById(expenseId);
         }
 
         @Override
