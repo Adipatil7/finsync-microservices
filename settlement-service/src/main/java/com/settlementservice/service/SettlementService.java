@@ -16,5 +16,5 @@ public interface SettlementService {
 
     List<SettlementSuggestion> getSettlementPlan(UUID groupId);
 
-    void recordSettlement(UUID groupId, UUID payerId, UUID payeeId, BigDecimal amount, String currency);
+    void recordSettlement(UUID groupId, UUID payerId, UUID payeeId, BigDecimal amount, String currency, UUID requestingUserId);
 }

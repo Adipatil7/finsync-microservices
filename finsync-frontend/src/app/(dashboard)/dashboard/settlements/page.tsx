@@ -17,7 +17,8 @@ import { Button } from "@/components/ui/button";
 import { groupService } from "@/services/group-service";
 import { settlementService } from "@/services/settlement-service";
 import { formatCurrency } from "@/lib/utils";
-import type { GroupResponse, SettlementSuggestion } from "@/types";
+import type { GroupResponse, SettlementSuggestion, GroupMember } from "@/types";
+import { useMemo } from "react";
 
 function GroupSettlements({ group }: { group: GroupResponse }) {
   const queryClient = useQueryClient();
@@ -26,6 +27,24 @@ function GroupSettlements({ group }: { group: GroupResponse }) {
     queryKey: ["settlement-plan", group.id],
     queryFn: () => settlementService.getSettlementPlan(group.id),
   });
+
+  const { data: members } = useQuery({
+    queryKey: ["group-members", group.id],
+    queryFn: () => groupService.getMembers(group.id),
+  });
+
+  // Build a userId → name lookup map
+  const nameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (members) {
+      members.forEach((m: GroupMember) => {
+        map[m.userId] = m.name || m.userId.substring(0, 8) + "...";
+      });
+    }
+    return map;
+  }, [members]);
+
+  const getName = (userId: string) => nameMap[userId] || userId.substring(0, 8) + "...";
 
   const settleMutation = useMutation({
     mutationFn: (data: { payerId: string; payeeId: string; amount: number; currency: string }) =>
@@ -36,8 +55,6 @@ function GroupSettlements({ group }: { group: GroupResponse }) {
     },
     onError: () => toast.error("Failed to record settlement"),
   });
-
-  const shortId = (id: string) => id.substring(0, 8) + "...";
 
   if (isLoading) {
     return (
@@ -64,9 +81,9 @@ function GroupSettlements({ group }: { group: GroupResponse }) {
           className="flex items-center justify-between p-3 rounded-lg bg-accent/30"
         >
           <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium">{shortId(suggestion.fromUserId)}</span>
+            <span className="font-medium">{getName(suggestion.fromUserId)}</span>
             <ArrowRight className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{shortId(suggestion.toUserId)}</span>
+            <span className="font-medium">{getName(suggestion.toUserId)}</span>
             <span className="font-semibold text-amber-600 ml-2">
               {formatCurrency(suggestion.amount, suggestion.currency)}
             </span>

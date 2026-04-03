@@ -85,7 +85,12 @@ public class SettlementServiceImpl implements SettlementService {
 
     @Override
     @Transactional
-    public void recordSettlement(UUID groupId, UUID payerId, UUID payeeId, BigDecimal amount, String currency) {
+    public void recordSettlement(UUID groupId, UUID payerId, UUID payeeId, BigDecimal amount, String currency, UUID requestingUserId) {
+        // Permission check: only the payer or payee can record a settlement
+        if (!requestingUserId.equals(payerId) && !requestingUserId.equals(payeeId)) {
+            throw new RuntimeException("Only the payer or payee involved in this settlement can record it.");
+        }
+
         // When a user records a manual settlement (payer pays payee),
         // it reduces the debt: payer was the debtor, payee was the creditor.
         // So we subtract from the ledger entry where debtor=payer, creditor=payee.

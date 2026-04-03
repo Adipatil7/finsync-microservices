@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,6 +54,7 @@ public class SettlementController {
     @PostMapping("/groups/{groupId}/settle")
     public ResponseEntity<String> recordSettlement(
             @PathVariable UUID groupId,
+            @RequestHeader("X-User-Id") UUID requestingUserId,
             @Valid @RequestBody RecordSettlementRequest request
     ) {
         settlementService.recordSettlement(
@@ -60,7 +62,8 @@ public class SettlementController {
                 request.getPayerId(),
                 request.getPayeeId(),
                 request.getAmount(),
-                request.getCurrency()
+                request.getCurrency(),
+                requestingUserId
         );
         return ResponseEntity.ok("Settlement recorded successfully");
     }
