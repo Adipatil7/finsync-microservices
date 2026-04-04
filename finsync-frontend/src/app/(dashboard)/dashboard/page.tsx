@@ -26,6 +26,8 @@ import {
   Cell,
 } from "recharts";
 import Link from "next/link";
+import { TypingText } from "@/components/ui/typing-text";
+import { useScrollReveal } from "@/hooks/use-scroll-reveal";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,7 +35,16 @@ import { personalService } from "@/services/personal-service";
 import { groupService } from "@/services/group-service";
 import { formatCurrency, getCurrentMonth } from "@/lib/utils";
 
-const CHART_COLORS = ["#6366f1", "#8b5cf6", "#a78bfa", "#c4b5fd", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4"];
+const CHART_COLORS = [
+  "#6366f1",
+  "#8b5cf6",
+  "#a78bfa",
+  "#c4b5fd",
+  "#10b981",
+  "#f59e0b",
+  "#f43f5e",
+  "#06b6d4",
+];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -50,6 +61,7 @@ const itemVariants = {
 
 export default function DashboardPage() {
   const currentMonth = getCurrentMonth();
+  const chartsReveal = useScrollReveal(0.15);
 
   const { data: summary } = useQuery({
     queryKey: ["monthly-summary", currentMonth],
@@ -74,11 +86,14 @@ export default function DashboardPage() {
   // Build category spending data for pie chart
   const categorySpending = transactions
     ?.filter((t) => t.type === "EXPENSE")
-    .reduce((acc, t) => {
-      const cat = t.categoryName || "Other";
-      acc[cat] = (acc[cat] || 0) + t.amount;
-      return acc;
-    }, {} as Record<string, number>);
+    .reduce(
+      (acc, t) => {
+        const cat = t.categoryName || "Other";
+        acc[cat] = (acc[cat] || 0) + t.amount;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
   const pieData = categorySpending
     ? Object.entries(categorySpending)
@@ -89,7 +104,10 @@ export default function DashboardPage() {
 
   // Recent transactions for activity feed
   const recentTransactions = transactions
-    ?.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    ?.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
     .slice(0, 6);
 
   const summaryCards = [
@@ -113,9 +131,16 @@ export default function DashboardPage() {
       title: "Net Savings",
       value: formatCurrency(summary?.netSavings || 0),
       icon: PiggyBank,
-      color: (summary?.netSavings || 0) >= 0 ? "text-emerald-500" : "text-rose-500",
-      bgColor: (summary?.netSavings || 0) >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10",
-      borderColor: (summary?.netSavings || 0) >= 0 ? "border-emerald-500/20" : "border-rose-500/20",
+      color:
+        (summary?.netSavings || 0) >= 0 ? "text-emerald-500" : "text-rose-500",
+      bgColor:
+        (summary?.netSavings || 0) >= 0
+          ? "bg-emerald-500/10"
+          : "bg-rose-500/10",
+      borderColor:
+        (summary?.netSavings || 0) >= 0
+          ? "border-emerald-500/20"
+          : "border-rose-500/20",
     },
     {
       title: "Active Groups",
@@ -138,7 +163,14 @@ export default function DashboardPage() {
       <motion.div variants={itemVariants} className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Your financial overview at a glance</p>
+          <p className="text-muted-foreground mt-1">
+            <TypingText
+              strings={["Tracking your expenses...", "Optimizing settlements...", "Your financial overview at a glance"]}
+              typingSpeed={40}
+              pauseTime={2000}
+              className="text-sm"
+            />
+          </p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/personal">
@@ -157,29 +189,47 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Summary Cards */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryCards.map((card) => (
-          <Card
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        {summaryCards.map((card, idx) => (
+          <motion.div
             key={card.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.08, duration: 0.4 }}
+          >
+          <Card
             className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border ${card.borderColor}`}
           >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                  <p className={`text-2xl font-bold mt-1 ${card.color}`}>{card.value}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {card.title}
+                  </p>
+                  <p className={`text-2xl font-bold mt-1 ${card.color}`}>
+                    {card.value}
+                  </p>
                 </div>
-                <div className={`w-12 h-12 rounded-xl ${card.bgColor} flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 rounded-xl ${card.bgColor} flex items-center justify-center`}
+                >
                   <card.icon className={`w-6 h-6 ${card.color}`} />
                 </div>
               </div>
             </CardContent>
           </Card>
+          </motion.div>
         ))}
       </motion.div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div
+        ref={chartsReveal.ref}
+        className={`grid grid-cols-1 lg:grid-cols-2 gap-6 transition-all duration-700 ${chartsReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+      >
         {/* Top Category */}
         <motion.div variants={itemVariants}>
           <Card className="h-full">
@@ -193,7 +243,9 @@ export default function DashboardPage() {
                     <Receipt className="w-8 h-8 text-rose-500" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{summary.topCategoryName}</p>
+                    <p className="text-2xl font-bold">
+                      {summary.topCategoryName}
+                    </p>
                     <p className="text-lg text-rose-500 font-semibold">
                       {formatCurrency(summary.topCategoryAmount)}
                     </p>
@@ -228,7 +280,10 @@ export default function DashboardPage() {
                         dataKey="value"
                       >
                         {pieData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
                         ))}
                       </Pie>
                       <Tooltip
@@ -251,10 +306,15 @@ export default function DashboardPage() {
               {/* Legend */}
               <div className="flex flex-wrap gap-3 mt-2 justify-center">
                 {pieData.map((item, i) => (
-                  <div key={item.name} className="flex items-center gap-1.5 text-xs">
+                  <div
+                    key={item.name}
+                    className="flex items-center gap-1.5 text-xs"
+                  >
                     <div
                       className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                      style={{
+                        backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
+                      }}
                     />
                     <span className="text-muted-foreground">{item.name}</span>
                   </div>
@@ -279,15 +339,20 @@ export default function DashboardPage() {
           <CardContent>
             {recentTransactions && recentTransactions.length > 0 ? (
               <div className="space-y-3">
-                {recentTransactions.map((tx) => (
-                  <div
+                {recentTransactions.map((tx, idx) => (
+                  <motion.div
                     key={tx.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.06, duration: 0.3 }}
                     className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          tx.type === "INCOME" ? "bg-emerald-500/10" : "bg-rose-500/10"
+                          tx.type === "INCOME"
+                            ? "bg-emerald-500/10"
+                            : "bg-rose-500/10"
                         }`}
                       >
                         {tx.type === "INCOME" ? (
@@ -297,25 +362,34 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-sm">{tx.description || tx.categoryName}</p>
-                        <p className="text-xs text-muted-foreground">{tx.categoryName} · {tx.transactionDate}</p>
+                        <p className="font-medium text-sm">
+                          {tx.description || tx.categoryName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {tx.categoryName} · {tx.transactionDate}
+                        </p>
                       </div>
                     </div>
                     <p
                       className={`font-semibold ${
-                        tx.type === "INCOME" ? "text-emerald-500" : "text-rose-500"
+                        tx.type === "INCOME"
+                          ? "text-emerald-500"
+                          : "text-rose-500"
                       }`}
                     >
-                      {tx.type === "INCOME" ? "+" : "-"}{formatCurrency(tx.amount)}
+                      {tx.type === "INCOME" ? "+" : "-"}
+                      {formatCurrency(tx.amount)}
                     </p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             ) : (
               <div className="py-8 text-center text-muted-foreground">
                 <Receipt className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>No transactions yet</p>
-                <p className="text-sm">Start by adding your first transaction</p>
+                <p className="text-sm">
+                  Start by adding your first transaction
+                </p>
               </div>
             )}
           </CardContent>

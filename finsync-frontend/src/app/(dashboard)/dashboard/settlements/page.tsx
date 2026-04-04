@@ -44,13 +44,20 @@ function GroupSettlements({ group }: { group: GroupResponse }) {
     return map;
   }, [members]);
 
-  const getName = (userId: string) => nameMap[userId] || userId.substring(0, 8) + "...";
+  const getName = (userId: string) =>
+    nameMap[userId] || userId.substring(0, 8) + "...";
 
   const settleMutation = useMutation({
-    mutationFn: (data: { payerId: string; payeeId: string; amount: number; currency: string }) =>
-      settlementService.recordSettlement(group.id, data),
+    mutationFn: (data: {
+      payerId: string;
+      payeeId: string;
+      amount: number;
+      currency: string;
+    }) => settlementService.recordSettlement(group.id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settlement-plan", group.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["settlement-plan", group.id],
+      });
       toast.success("Settlement recorded");
     },
     onError: () => toast.error("Failed to record settlement"),
@@ -76,12 +83,17 @@ function GroupSettlements({ group }: { group: GroupResponse }) {
   return (
     <div className="space-y-2 p-4 pt-0">
       {plan.map((suggestion, i) => (
-        <div
+        <motion.div
           key={i}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.08, duration: 0.35 }}
           className="flex items-center justify-between p-3 rounded-lg bg-accent/30"
         >
           <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium">{getName(suggestion.fromUserId)}</span>
+            <span className="font-medium">
+              {getName(suggestion.fromUserId)}
+            </span>
             <ArrowRight className="w-4 h-4 text-muted-foreground" />
             <span className="font-medium">{getName(suggestion.toUserId)}</span>
             <span className="font-semibold text-amber-600 ml-2">
@@ -105,7 +117,7 @@ function GroupSettlements({ group }: { group: GroupResponse }) {
             <CheckCircle2 className="w-3.5 h-3.5" />
             Settle
           </Button>
-        </div>
+        </motion.div>
       ))}
     </div>
   );
@@ -125,7 +137,9 @@ export default function SettlementsPage() {
     >
       <div>
         <h1 className="text-3xl font-bold">Settlements</h1>
-        <p className="text-muted-foreground mt-1">View and resolve pending settlements across all groups</p>
+        <p className="text-muted-foreground mt-1">
+          View and resolve pending settlements across all groups
+        </p>
       </div>
 
       {isLoading ? (
@@ -144,7 +158,12 @@ export default function SettlementsPage() {
                   <div>
                     <CardTitle className="text-base">{group.name}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {group.memberCount} members · {formatCurrency(group.totalSpent, group.currency || "INR")} total
+                      {group.memberCount} members ·{" "}
+                      {formatCurrency(
+                        group.totalSpent,
+                        group.currency || "INR",
+                      )}{" "}
+                      total
                     </p>
                   </div>
                 </div>
@@ -163,7 +182,9 @@ export default function SettlementsPage() {
           <CardContent className="py-16 text-center text-muted-foreground">
             <ArrowLeftRight className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p className="font-medium">No groups yet</p>
-            <p className="text-sm">Create a group to start tracking settlements</p>
+            <p className="text-sm">
+              Create a group to start tracking settlements
+            </p>
           </CardContent>
         </Card>
       )}

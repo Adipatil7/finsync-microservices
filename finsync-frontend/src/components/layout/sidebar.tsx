@@ -124,7 +124,8 @@ export function Sidebar() {
             );
           }
 
-          const isActive = pathname === item.href || 
+          const isActive =
+            pathname === item.href ||
             (item.href !== "/dashboard" && pathname?.startsWith(item.href!));
           const Icon = item.icon!;
 
@@ -136,13 +137,15 @@ export function Sidebar() {
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
                 isActive
                   ? "bg-primary/10 text-primary shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent",
               )}
             >
               <Icon
                 className={cn(
-                  "w-5 h-5 flex-shrink-0 transition-colors",
-                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                  "w-5 h-5 flex-shrink-0 transition-colors icon-hover",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground group-hover:text-foreground",
                 )}
               />
               <AnimatePresence>
@@ -174,7 +177,11 @@ export function Sidebar() {
           onClick={() => setCollapsed(!collapsed)}
           className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
         >
-          {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          {collapsed ? (
+            <ChevronRight className="w-5 h-5" />
+          ) : (
+            <ChevronLeft className="w-5 h-5" />
+          )}
         </button>
       </div>
     </motion.aside>
